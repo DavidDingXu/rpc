@@ -2,13 +2,13 @@
  * *****************************************************
  * *****************************************************
  * Copyright (C), 2018-2020, panda-fa.com
- * FileName: com.panda.rpc.demo.client.ClientDemo
+ * FileName: com.panda.rpc.demo.consumer.ClientDemo
  * Author:   丁许
  * Date:     2019/7/15 20:21
  * *****************************************************
  * *****************************************************
  */
-package com.panda.rpc.demo.client;
+package com.panda.rpc.demo.consumer;
 
 import com.panda.rpc.client.RpcClientProxy;
 import com.panda.rpc.demo.api.Ihello;
@@ -29,7 +29,7 @@ public class ClientDemo {
 		IServerDiscover serverDiscover = new ZkServerDiscover("192.168.40.14:2181");
 		RpcClientProxy rpcClientProxy = new RpcClientProxy(serverDiscover);
 
-		//测试版本
+		//测试服务版本
 		try {
 			Ihello ihello = rpcClientProxy.clientProxy(Ihello.class, "1.0");
 			System.out.println(ihello.sayHello("dd"));
@@ -49,5 +49,4 @@ public class ClientDemo {
 			Thread.sleep(2000);
 		}
 	}
-
 }

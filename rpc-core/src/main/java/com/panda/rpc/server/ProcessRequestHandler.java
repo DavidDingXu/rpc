@@ -14,6 +14,8 @@ import com.alibaba.fastjson.JSON;
 import com.panda.rpc.common.ResponseCode;
 import com.panda.rpc.common.RpcRequest;
 import com.panda.rpc.common.RpcResponse;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
@@ -43,10 +45,10 @@ public class ProcessRequestHandler extends SimpleChannelInboundHandler<String> {
 
 	@Override
 	protected void channelRead0(ChannelHandlerContext channelHandlerContext, String s) throws Exception {
-		log.debug("收到request:{}",s);
+		log.debug("收到request:{}", s);
 		Object result = this.invoke(JSON.parseObject(s, RpcRequest.class));
-		Thread.sleep(5000);
-		channelHandlerContext.channel().writeAndFlush(JSON.toJSONString(result));
+		ChannelFuture future = channelHandlerContext.writeAndFlush(JSON.toJSONString(result));
+		future.addListener(ChannelFutureListener.CLOSE);
 	}
 
 	@Override

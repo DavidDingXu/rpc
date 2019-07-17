@@ -2,7 +2,7 @@
  * *****************************************************
  * *****************************************************
  * Copyright (C), 2018-2020, panda-fa.com
- * FileName: com.panda.rpc.client.NettyTransport
+ * FileName: com.panda.rpc.consumer.NettyTransport
  * Author:   丁许
  * Date:     2019/7/16 21:50
  * *****************************************************
@@ -34,6 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class NettyTransport {
 
+	private static Bootstrap bootstrap;
+
 	private String host;
 
 	private int port;
@@ -43,11 +45,12 @@ public class NettyTransport {
 		this.port = port;
 	}
 
-	public static Bootstrap getBootstrap() {
+	static {
+		bootstrap = new Bootstrap();
 		EventLoopGroup group = new NioEventLoopGroup();
-		Bootstrap b = new Bootstrap();
-		b.group(group).channel(NioSocketChannel.class);
-		b.handler(new ChannelInitializer<Channel>() {
+
+		bootstrap.group(group).channel(NioSocketChannel.class);
+		bootstrap.handler(new ChannelInitializer<Channel>() {
 
 			@Override
 			protected void initChannel(Channel ch) throws Exception {
@@ -59,11 +62,10 @@ public class NettyTransport {
 				pipeline.addLast(new ClientHandler());
 			}
 		});
-		return b;
 	}
 
 	public RpcResponse send(RpcRequest request) throws InterruptedException {
-		ChannelFuture channelFuture = getBootstrap().connect(host, port).sync();
+		ChannelFuture channelFuture = bootstrap.connect(host, port).sync();
 		Channel channel = channelFuture.channel();
 		channel.writeAndFlush(JSON.toJSONString(request));
 		//当通道关闭了，就继续往下走
@@ -76,7 +78,7 @@ public class NettyTransport {
 
 		@Override
 		protected void channelRead0(ChannelHandlerContext channelHandlerContext, String s) throws Exception {
-			log.debug("收到response:{}",s);
+			log.debug("收到response:{}", s);
 			RpcResponse response = JSON.parseObject(s, RpcResponse.class);
 			AttributeKey<RpcResponse> key = AttributeKey.valueOf("rpcResponse");
 			channelHandlerContext.channel().attr(key).set(response);

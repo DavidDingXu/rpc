@@ -2,7 +2,7 @@
  * *****************************************************
  * *****************************************************
  * Copyright (C), 2018-2020, panda-fa.com
- * FileName: com.panda.rpc.client.RpcClientProxy
+ * FileName: com.panda.rpc.consumer.RpcClientProxy
  * Author:   丁许
  * Date:     2019/7/15 19:08
  * *****************************************************

@@ -21,13 +21,9 @@ import org.apache.curator.framework.recipes.cache.PathChildrenCacheListener;
 import org.apache.curator.retry.ExponentialBackoffRetry;
 import org.apache.zookeeper.KeeperException;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * <Description>
@@ -49,7 +45,7 @@ public class ZkServerDiscover implements IServerDiscover {
 	/**
 	 * 该线程负责定时更新服务列表
 	 */
-	private static ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
+//	private static ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
 	public ZkServerDiscover(String connectionAddress) {
 		this.connectionAddress = connectionAddress;
@@ -81,25 +77,25 @@ public class ZkServerDiscover implements IServerDiscover {
 	/**
 	 * 更新服务列表
 	 */
-	private void updateServiceAddressMap() throws Exception {
-		List<String> serviceNames = curatorFramework.getChildren().forPath(ZkRegisterCenter.ZK_REGISTER_PATH);
-		//清除没有serviceName的值
-		Set<String> serviceNameSet = new HashSet<>(serviceNames);
-		serviceAddressMap.keySet().forEach(key -> {
-			if (!serviceNameSet.contains(key)) {
-				//不存在的服务本地给清除
-				serviceAddressMap.remove(key);
-			}
-		});
-		//更新所有serviceName的列表
-		for (String serviceName : serviceNames) {
-			String path = ZkRegisterCenter.ZK_REGISTER_PATH + "/" + serviceName;
-			List<String> serviceAddresses = curatorFramework.getChildren().forPath(path);
-			serviceAddressMap.put(serviceName, serviceAddresses);
-			//添加订阅
-			registerWatcher(serviceName);
-		}
-	}
+//	private void updateServiceAddressMap() throws Exception {
+//		List<String> serviceNames = curatorFramework.getChildren().forPath(ZkRegisterCenter.ZK_REGISTER_PATH);
+//		//清除没有serviceName的值
+//		Set<String> serviceNameSet = new HashSet<>(serviceNames);
+//		serviceAddressMap.keySet().forEach(key -> {
+//			if (!serviceNameSet.contains(key)) {
+//				//不存在的服务本地给清除
+//				serviceAddressMap.remove(key);
+//			}
+//		});
+//		//更新所有serviceName的列表
+//		for (String serviceName : serviceNames) {
+//			String path = ZkRegisterCenter.ZK_REGISTER_PATH + "/" + serviceName;
+//			List<String> serviceAddresses = curatorFramework.getChildren().forPath(path);
+//			serviceAddressMap.put(serviceName, serviceAddresses);
+//			//添加订阅
+//			registerWatcher(serviceName);
+//		}
+//	}
 
 	/**
 	 * 可以手动设置负载算法

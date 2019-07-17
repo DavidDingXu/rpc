@@ -2,7 +2,7 @@
  * *****************************************************
  * *****************************************************
  * Copyright (C), 2018-2020, panda-fa.com
- * FileName: com.panda.rpc.client.RpcInvocationHandler
+ * FileName: com.panda.rpc.consumer.RpcInvocationHandler
  * Author:   丁许
  * Date:     2019/7/15 19:15
  * *****************************************************
