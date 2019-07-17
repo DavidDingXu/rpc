@@ -30,12 +30,11 @@ public class ClientDemo {
 		RpcClientProxy rpcClientProxy = new RpcClientProxy(serverDiscover);
 
 		//测试版本
-		Ihello ihello = null;
 		try {
-			ihello = rpcClientProxy.clientProxy(Ihello.class, "1.0");
+			Ihello ihello = rpcClientProxy.clientProxy(Ihello.class, "1.0");
 			System.out.println(ihello.sayHello("dd"));
 		} catch (Exception e) {
-			log.error("调用失败：e:{}",e.getMessage());
+			log.error("调用失败：e:{}",e.toString());
 		}
 		//测试集群
 		for (int i = 0; i < 10; i++) {
@@ -44,7 +43,7 @@ public class ClientDemo {
 				String result=helloService.sayHello("xxx");
 				System.out.println(result);
 			} catch (Exception e) {
-				log.error("调用失败：e:{}",e.getMessage());
+				log.error("调用失败：e:{}",e.toString());
 			}
 
 			Thread.sleep(2000);

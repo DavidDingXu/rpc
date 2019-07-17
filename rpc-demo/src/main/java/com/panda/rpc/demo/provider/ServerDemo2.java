@@ -25,7 +25,7 @@ import java.util.Arrays;
  */
 public class ServerDemo2 {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws InterruptedException {
 		Ihello helloService = new HelloImpl2();
 		IregisterCenter registerCenter = new ZkRegisterCenter("192.168.40.14:2181");
 		RpcServer rpcServer = new RpcServer(registerCenter, "127.0.0.1", 9999);

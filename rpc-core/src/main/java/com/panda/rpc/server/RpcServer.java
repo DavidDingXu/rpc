@@ -12,16 +12,22 @@ package com.panda.rpc.server;
 
 import com.panda.rpc.annotation.RpcService;
 import com.panda.rpc.register.IregisterCenter;
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.codec.LengthFieldPrepender;
+import io.netty.handler.codec.string.StringDecoder;
+import io.netty.handler.codec.string.StringEncoder;
+import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.IOException;
-import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * 开启一个rpc远程服务
@@ -31,8 +37,6 @@ import java.util.concurrent.Executors;
  */
 @Slf4j
 public class RpcServer {
-
-	private static ExecutorService executorService = Executors.newCachedThreadPool();
 
 	/**
 	 * 注册中心
@@ -85,30 +89,36 @@ public class RpcServer {
 	/**
 	 * 发布服务
 	 */
-	public void publish() {
-		//启动一个socket服务
-		try (ServerSocket serverSocket = new ServerSocket(servicePort)) {
-			//服务注册
-			handlerMap.keySet().forEach(serviceName -> {
-				try {
-					registerCenter.register(serviceName, serviceIp + ":" + servicePort);
-				} catch (Exception e) {
+	public void publish() throws InterruptedException {
+		//使用netty开启一个服务
+		ServerBootstrap bootstrap = new ServerBootstrap();
+		NioEventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+		bootstrap.group(eventLoopGroup).channel(NioServerSocketChannel.class)
+				.childHandler(new ChannelInitializer<SocketChannel>() {
 
-					log.error("服务注册失败,e:{}", e.getMessage());
-					throw new RuntimeException("服务注册失败");
-				}
-				log.info("成功注册服务，服务名称：{},服务地址：{}", serviceName, serviceIp + ":" + servicePort);
-			});
-			//循环监听
-			while (true) {
-				//使用BIO方案
-				Socket socket = serverSocket.accept();
-				//异步处理请求
-				executorService.execute(new ProcessRequest(socket, handlerMap));
+					@Override
+					protected void initChannel(SocketChannel ch) throws Exception {
+						ChannelPipeline p = ch.pipeline();
+						//数据分包，组包，粘包
+						p.addLast(new LengthFieldBasedFrameDecoder(Integer.MAX_VALUE,0,4,0,4));
+						p.addLast(new LengthFieldPrepender(4));
+						p.addLast(new StringDecoder(CharsetUtil.UTF_8));
+						p.addLast(new StringEncoder(CharsetUtil.UTF_8));
+						p.addLast(new ProcessRequestHandler(handlerMap));
+					}
+				});
+		bootstrap.bind(serviceIp, servicePort).sync();
+		log.info("成功启动服务,host:{},port:{}", serviceIp, servicePort);
+		//服务注册
+		handlerMap.keySet().forEach(serviceName -> {
+			try {
+				registerCenter.register(serviceName, serviceIp + ":" + servicePort);
+			} catch (Exception e) {
+
+				log.error("服务注册失败,e:{}", e.getMessage());
+				throw new RuntimeException("服务注册失败");
 			}
-
-		} catch (IOException e) {
-			log.error("socket异常,e:{}", e.getMessage());
-		}
+			log.info("成功注册服务，服务名称：{},服务地址：{}", serviceName, serviceIp + ":" + servicePort);
+		});
 	}
 }

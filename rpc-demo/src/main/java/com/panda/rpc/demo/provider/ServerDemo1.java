@@ -25,7 +25,7 @@ import java.util.Arrays;
  */
 public class ServerDemo1 {
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws InterruptedException {
 		Ihello helloService = new HelloImpl1();
 		Ihello helloService2=new HelloImpl1Version();
 		IregisterCenter registerCenter = new ZkRegisterCenter("192.168.40.14:2181");

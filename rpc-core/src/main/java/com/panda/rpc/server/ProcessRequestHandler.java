@@ -10,16 +10,16 @@
  */
 package com.panda.rpc.server;
 
+import com.alibaba.fastjson.JSON;
 import com.panda.rpc.common.ResponseCode;
 import com.panda.rpc.common.RpcRequest;
 import com.panda.rpc.common.RpcResponse;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.SimpleChannelInboundHandler;
 import lombok.extern.slf4j.Slf4j;
 
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.Socket;
 import java.util.Arrays;
 import java.util.Map;
 
@@ -30,35 +30,29 @@ import java.util.Map;
  * @date 2019/7/15 17:54
  */
 @Slf4j
-public class ProcessRequest implements Runnable {
-
-	/**
-	 * socket连接
-	 */
-	private Socket socket;
+public class ProcessRequestHandler extends SimpleChannelInboundHandler<String> {
 
 	/**
 	 * 服务映射
 	 */
 	private Map<String, Object> handlerMap;
 
-	public ProcessRequest(Socket socket, Map<String, Object> handlerMap) {
-		this.socket = socket;
+	public ProcessRequestHandler(Map<String, Object> handlerMap) {
 		this.handlerMap = handlerMap;
 	}
 
 	@Override
-	public void run() {
-		try (ObjectInputStream inputStream = new ObjectInputStream(socket.getInputStream());
-				ObjectOutputStream outputStream = new ObjectOutputStream(socket.getOutputStream())) {
-			//反序列化RpcRequest
-			RpcRequest request = (RpcRequest) inputStream.readObject();
-			Object result = this.invoke(request);
-			outputStream.writeObject(result);
-			outputStream.flush();
-		} catch (Exception e) {
-			log.error("socket读写数据异常:e:{}", e.getMessage());
-		}
+	protected void channelRead0(ChannelHandlerContext channelHandlerContext, String s) throws Exception {
+		log.debug("收到request:{}",s);
+		Object result = this.invoke(JSON.parseObject(s, RpcRequest.class));
+		Thread.sleep(5000);
+		channelHandlerContext.channel().writeAndFlush(JSON.toJSONString(result));
+	}
+
+	@Override
+	public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
+		log.error("Unexpected exception from downstream.", cause);
+		ctx.close();
 	}
 
 	/**
